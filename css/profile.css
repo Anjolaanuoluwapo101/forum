@@ -1,0 +1,109 @@
+
+
+.header{
+	width:90%;
+	min-height:100px;
+	margin:auto;
+	margin-top:40px;
+	display:flex;
+	flex-direction:column;
+	justify-content: center;
+	align-items: center;
+	border-radius:40px;
+	box-shadow: 10px 7px 5px rgba(158,158,158,0.3);
+	-webkit-box-shadow: 10px 7px 5px rgba(158,158,158,0.3);
+}
+
+.header div{
+	width:auto;
+	display:flex;
+	justify-content: center;
+	align-items: center;
+}
+
+
+#imgThumbnail img{
+	width:60px;
+	border-radius:50%;
+	background:rgb(0,0,0,0.4);
+}
+
+
+
+.switchBetweenTabs{
+	width:90%;
+	display:flex;
+	flex-direction:row;
+	/*justify-content: center;
+	align-items: center;*/
+	padding:5px;
+/*border-radius:40px;
+	box-shadow: 10px 7px 5px rgba(158,158,158,0.3);
+	-webkit-box-shadow: 10px 7px 5px rgba(158,158,158,0.3);*/
+	font-size:12px;
+	font-weight:200;
+	margin:auto;
+	margin-top:30px;
+}
+
+.switchBetweenTabs div{
+	width:50%;
+	padding:10px;
+	background-color:white;
+	text-align:center;
+	border:solid rgba(159,159,159,0.3);
+}
+
+
+.firstTab{
+	padding:10px;
+}
+
+.secondTab{
+	height:auto;
+	width:90%;
+	padding:10px;
+	overflow-y:scroll;
+	box-shadow: 10px 7px 5px rgba(158,158,158,0.3);
+	-webkit-box-shadow: 10px 7px 5px rgba(158,158,158,0.3);
+
+}
+
+
+
+.infoDivs{
+	font-size:12px;
+	font-weight:200;
+	width:90%;
+	min-height:30px;
+	/*line-height: 30px;
+	vertical-align: middle;*/
+	padding: 5px;
+	margin:auto;
+	margin-top:10px;
+	display:flex;
+	flex-direction:column;
+	justify-content: center;
+	align-items: center;
+	border-radius:40px;
+	box-shadow: 10px 7px 5px rgba(158,158,158,0.3);
+	-webkit-box-shadow: 10px 7px 5px rgba(158,158,158,0.3);
+}
+
+
+.infoDivs table tr{
+	width:100%;
+}
+.infoDivs table tr .name{
+	width:30%;
+}
+.infoDivs table tr .value{
+	width:30%;
+}
+
+.infoDivs div{
+	/* this block is for the about you section */
+	display:flex;
+	justify-content: center;
+	align-items: center;
+}
