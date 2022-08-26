@@ -8,7 +8,7 @@ if(isset($_GET['Post_no'],$_GET['Post_title'])){
 	require_once("class.php");
 	try{
 	$post_no=$_GET['Post_no'];
-	$post_title=$_GET['Post_title'];
+	$post_title=urldecode($_GET['Post_title']);
 	$post_owner =$_GET['Post_owner'];
 	
 	$sqlQuery="SELECT * FROM Posts WHERE `Post_no`=? AND `Post_title`=?";

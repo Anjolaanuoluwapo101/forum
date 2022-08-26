@@ -2,18 +2,22 @@
 //start session that would to check if user is logged in.
 session_name('ProgrammersHub');
 session_start();
+$user=$_SESSION['Username']; //this is used in the preg_match function.
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<!--	<link rel="stylesheet" href="css/w3.css">-->
+  <!--<link rel="stylesheet" href="css/w3.css">-->
 	<link rel="stylesheet" href="css/style.css">
 	<link rel="stylesheet" href="css/font-awesome/css/font-awesome.min.css">
 	
 </head>
 <body>
+  
+  
+  
 <?php
 try{
 	require_once("class.php");
@@ -23,8 +27,8 @@ try{
 	This two variables are used to customize the link to that ensure us to comment on this post.
 	Along with $post_time_
 	*/
-	$post_no=1;
-	$post_title="PHP is an highly recommended programming language";
+	$post_no=$_GET['Post_no'];
+	$post_title=$_GET['Post_title'];
 	$post_title_=urlencode($post_title);
 	
 	
@@ -44,6 +48,7 @@ try{
 	if($result == 0){
 		/* if the post doesn't exist due to link tampering,a http 404 page is generated instead*/
 		http_response_code(404);
+		die();
 	}else{
 		
 	/* If the post exists,the database connection link is reset by calling the singleton class method  again to return the database connection 
@@ -69,7 +74,7 @@ try{
   
   /*
   The nxt 3 variables are needed in the Post_Liker_Unliker.php script and also 
-  they are used to customize the comment link for this post.
+  they are sent via an ajax request by the Post_Liker_Unliker() js function....
   */
   $post_no=1;
 	$post_title="PHP is an highly recommended programming language";
@@ -79,21 +84,25 @@ try{
   
 	/*
 	Populate variables that would be used to customize the link to comment on this post
-	Along with post_no and post_title_
+	Along with post_no and post_title_(post_no and post_title are found in the link referring to this script)
 	*/
 	$post_time_ =$postDetails['Post_time'];
 	$category_of_post=urlencode($postDetails['Category']);
-
+	if(isset($_GET['page'])){
+  $current_page = $_GET['page'];
+	}else{
+	  $current_page = 1;
+	}
 	/*
 	check what the meaning of what the Ids and LikeConfirmer variable does 
 	at the line 230 below...  It uses the same mechanism.Same as rhe reply.php script..CHECK LINE 230 HERE BELOW
 	*/
 
-	$id=$post_no."_B";
-	$ID=$post_no."_A";
-
+	$ID=$post_no."_A"; /*specific id for an html span elements,that allows a js ajax callback  function identify it and update the no_of_likes receieved by the post.*/
+	$id=$post_no."_B"; /*specific id for the like html button element,it allows js ajax callback identify this element an change it from like to liked /vice versa*/
+  $_ID = $post_no."_C";/* specific id for the html follow button so it can be altered by js ajax callback function*/
+  
 	$LikeConfirmer = $postDetails['LikeConfirmer'];
-	echo $_SESSION['Username'];
 	if(isset($_SESSION['Username']) && preg_match("/$user/",$LikeConfirmer)){
 			$like="<i class='fa fa-thumbs-up'>Liked</i>";
 	}else{
@@ -101,74 +110,6 @@ try{
 	}
 
 	$data=<<<HTML
-	<style>
-	.OPBlock{
-		width:90%;
-		margin-left:5%;
-		border:1px solid black;
-		text-align:center;
-		border-radius:20px;
-		min-height:100px;
-		}
-	
-	.OPBlock span{
-		float:left;
-		padding-left:5px;
-		font-weight:200;
-		font-size:12px;
-		
-	}
-	.OPBlock #category{
-	padding:5px;
-	padding-left:10px;
-		
-	}
-	
-	.OPBlock h4{
-		text-align:center;
-	}
-	.OPBlock h4 span{
-		font-size:12px;
-		font-weight:200;
-		float:right;
-		padding-right:20px;
-	}
-	
-	.OPBlock p{
-		padding:5px;
-		width:80%;
-		margin:auto;
-		border:1px solid silver;
-		border-radius:20px;
-		font-weight:200;
-		font-size:10px;
-	}
-	
-	.OPBlock #dateTime{
-	padding-right:10px;
-	padding-bottom:5px;
-	float:right;
-	}
-	
-	.OPBlockOptions{
-		padding:10px;
-		display:flex;
-		flex-direction:row;
-		flex-wrap:nowrap;
-		height:auto;
-		margin-top:5px;
-		width:100%;
-	}
-	
-	.OPBlockOptions button{
-		margin-right:2px;
-		margin-bottom:2px;
-		border:1px solid black;
-		padding:5px;
-	}
-	
-	</style>
-	
 	<div class="OPBlock" >
 	<span id="category" >In category: <a href="" > {$postDetails['Category']} </a> </span>
 	<br>
@@ -200,7 +141,8 @@ try{
 	
 	<div class="OPBlockOptions" >
 	<button id="$id" onclick="Post_Liker_Unliker(1)"> $like </button>
-	<button><a href="modify.php?Post_no=$post_no&Post_title=$post_title_&Post_time=$post_time_&Category_of_post=$category_of_post&Post_admin=$post_owner&newComment=1">Comment</a></button>
+	<button><a class="w3-button" href="create_new_comment_and_reply_edit_existing_comment_and_reply.php?Post_no=$post_no&Post_title=$post_title_&Post_time=$post_time_&Category_of_post=$category_of_post&Post_admin=$post_owner&newComment=1&page=$current_page">Comment</a></button>
+	<button id="$_ID" onclick='Follow_Unfollow_Post()'> Follow </button>
 	</div>
 	</div>
 HTML;
@@ -223,8 +165,8 @@ HTML;
 if(isset($_SESSION['Username'])){
 if($_SESSION['Username'] == $postDetails['Post_admin']){
 echo $toAdmin;
-}
-}
+    }
+  }
 ?>
 
 
@@ -236,7 +178,7 @@ echo $toAdmin;
 	The next block is the comment block...it does this lost of things...
 	Fetches a limited amount of comments(if they're plenty ) ,
 	Fetches the no_of_replies,no,of likes for each comments and embeds a link in them to allow you 
-	redirect tho a modify.php page where you can reply a comment.
+	redirect tho a create_new_comment_and_reply_edit_existing_comment_and_reply.php page where you can reply a comment.
 
 	It shows if the current viewer(a person with a account of this forum)/ of a page has liked a post before......
 	Pagnation is also employed so as to group the no_of_comment in batches...
@@ -244,6 +186,9 @@ echo $toAdmin;
 <div class="commentBlock">
 
 <?php
+
+require_once("pagnation.php");
+
 try{
 	//checks if post has any comments
 if($no_of_comments_for_post != 0){
@@ -254,13 +199,12 @@ if($no_of_comments_for_post != 0){
 	It also implements pagnation too
 	*/
 	
-		if(isset($_GET['page'])){
+	/*	if(isset($_GET['page'])){
 			$page=$_GET['page'];
 		}else{
 			$page=1;
-		}
-		$comment_per_page=15;
-		$offset=($page-1)*$comment_per_page;
+		}*/
+      
 		
 		$dbh = $instance->getConnection();
 		$sqlQuery="SELECT * FROM Comments WHERE `Post_no`=? ORDER BY `Time` ASC LIMIT ?,? ";
@@ -319,13 +263,13 @@ if($no_of_comments_for_post != 0){
 		
 		<div 	style="font-size:8px;margin-left:3px;margin-bottom-2px" >
 		 <span> No of likes: </span>  <span>{$comments['Comment_likes']} </span> <br>
-		<span>No of comments : {$comments['Comment_replies_count']}</span> 
+		<span>No of replies : {$comments['Comment_replies_count']}</span> 
 		</div>
 		
 		
 		
 		<div class="OPBlockOptions" >
-		<button  > View </button>
+		<button  > View Replies</button>
 		<button  > Edit Comment </button>
 		
 		</div>
@@ -369,12 +313,12 @@ $comment=<<<COMMENT
 		
 		<div	style="font-size:8px;margin-left:3px;margin-bottom-2px" >
 		<span>No of likes:</span> <span id="$ID">{$comments['Comment_likes']} </span> <br>
-		<span>No of comments : {$comments['Comment_replies_count']}</span> <br>
+		<span>No of replies : {$comments['Comment_replies_count']}</span> <br>
 		</div>
 		
 		<div class="OPBlockOptions" >
 		<button id="$id" onclick="CommentLiker_Unliker('$id')" >$like</button>
-		<button ><a href='modify.php?newReply=1&Comment_owner=$comment_username&Category_of_comment=$category_of_comment&Comment_bind_replies_id=$comment_bind_replies_id&time=$comment_time' > Reply </a> </button>
+		<button ><a href='create_new_comment_and_reply_edit_existing_comment_and_reply.php?newReply=1&Comment_owner=$comment_username&Category_of_comment=$category_of_comment&Comment_bind_replies_id=$comment_bind_replies_id&time=$comment_time' > Reply </a> </button>
 		</div>
 
 		</div>
@@ -397,49 +341,19 @@ echo "<br>";
 }catch(Exception $e){
 	echo $e->getMessage();
 }
-
 ?>
+
 </div>
 <br>
 <br>
-<div class="pagnation">
-	<?php
+<div class='pagnation'>
+
+<?php
 		/*
-		Implementing pagnation...
+		Implementing pagnation...from pagnation.php 
 		*/
-		
-		
-		$total_pages_for_the_post=ceil($no_of_comments_for_post/$comment_per_page);
-		$pagLink="";
-		/*
-		for the prev button in pagnation...
-		*/
-		if($page>=2){   
-			echo "<a href='displaypost.php?page=".($page-1)."'>Prev</a>";   
-        }
-        
-        
-        
-    
-    /*
-    for the list of pages in pagnation
-    */
-    for ($i=1; $i<=$total_pages_for_the_post; $i++) {
-    	if ($i == $page) {
-    		$pagLink .= "<a class = 'active' href='displaypost.php?page=".$i."'>".$i." </a>";
-    		
-    	}else{
-        $pagLink .= "<a href='displaypost.php?page=".$i."'>".$i." </a>";
-    		}
-    	};     
-		echo $pagLink;
-		
-		/*
-		for thr next button in pagnation
-		*/
-		if($page<$total_pages_for_the_post){
-			echo "<a href='displaypost.php?page=".($page+1)."'>Next</a>";   
-        }   
+
+		pagnation();
 ?>
 	
 </div>
@@ -448,7 +362,9 @@ echo "<br>";
 /*
 Javascript function to update the post like button and no of likes
 */
+
 function Post_Liker_Unliker(check) {
+alert("Liking post.....");
 var check = 1;
 var xhttp = new XMLHttpRequest();
 xhttp.onreadystatechange = function() {
@@ -456,6 +372,7 @@ if (this.readyState == 4 && this.status ==
 200) {
 document.getElementById("<?php echo $post_no."_B"; ?>").innerHTML=this.responseText;
 alterPostLikes(this.responseText);
+
 }
 };
 var link ="Post_Liker_Unliker.php?checker=".concat(check,"<?php $post_title_=urlencode($post_title); echo  '&Post_no='.$post_no.'&Post_title='.$post_title_.'&Post_owner='.$post_owner; ?>");
@@ -473,17 +390,16 @@ function alterPostLikes(check){
 	}
 }
 
+
 /*
 Javascript function to update a comments like button and no_of likes counter
-
-It uses the PostComments and CommentRepliea liker and unliker script
+It uses the PostComments and CommentReplies liker and unliker script
 */
 
 
 function CommentLiker_Unliker(id) {
-var id=id;
+alert('Liking comment..');
 var arr = id.split("|");
-alert("function getting called");
 var xhttp = new XMLHttpRequest();
 xhttp.onreadystatechange = function() {
 if (this.readyState == 4 && this.status ==
@@ -506,7 +422,33 @@ xhttp.send();
 	}
 
 
+/*
+Js function that runs to follow or unfollow  post
+*/
+
+function Follow_Unfollow_Post(){
+  alert('Following/unfollowing post....');
+  alert('function called!');
+  var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if(this.readyState == 4 && this.status == 200) {
+      if(this.responseText == "Post Unfollowed"){
+        document.getElementById('<?php echo $_ID; ?>').innerHTML= this.responseText;
+        
+      }else if(this.responseText == "Post Followed"){
+        document.getElementById('<?php echo $_ID; ?>').innerHTML= this.responseText;
+        
+      }
+      
+    }
+    
+  }
+      var url = 'Follow_Unfollow_Post.php<?php echo "?Post_no=".$post_no?>'; 
+      xhr.open("GET", url, true);
+      xhr.send();
+}
+
+
 </script>
 </body>
-
 </html>
