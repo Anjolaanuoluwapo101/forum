@@ -2,7 +2,7 @@
 session_name("ProgrammersHub");
 session_start();
 $username = $_SESSION['Username'];
-require_once('utilityfunctions.php');
+require_once('helperfiles/utilityfunctions.php');
 ?>
 
 <!DOCTYPE html>
@@ -20,13 +20,30 @@ require_once('utilityfunctions.php');
     html, body, h1, h2, h3, h4, h5 div {
       font-family: Arial;
     }
+    
+    #leftContainer{
+      margin-top:50px;
+    }
   </style>
 </head>
 <body>
-    <div class="w3-row" style="margin-top:50px">
+    <!-- Nav bar -->
+    <?php
+    require_once('nav_bar.php');
+    ?>
+  
+    <div class="w3-container" style="max-width:1400px;margin-top:50px">
+    <div class="w3-row">
       
+      <!--Left container -->
+      <?php
+        require_once('Left_Container.php');
+      ?>
+      
+        
+    
       <!-- Middle container-->
-    <div class="w3-container w3-content w3-col m6 l4">
+    <div class="w3-container w3-content w3-col m5 l4">
    
   <?php
   try {
@@ -36,7 +53,7 @@ require_once('utilityfunctions.php');
     $comment_bind_replies = $_GET['Comment_bind_replies_id'];
 
     //confirm that get request link was not tampered with...
-    require_once("class.php");
+    require_once("helperfiles/class.php");
 
 
     $sqlQuery = "SELECT COUNT(*) FROM Comments WHERE `Category`=? AND `Comment_bind_replies_id`=?";
@@ -120,6 +137,10 @@ require_once('utilityfunctions.php');
       $category_of_comment = $comments['Category'];
       $comment_bind_replies_id = $comments['Comment_bind_replies_id'];
 
+      /*
+      the 
+      */
+
 
       $LikeConfirmer = $comments['LikeConfirmer'];
 
@@ -160,6 +181,7 @@ require_once('utilityfunctions.php');
             <div class="w3-padding-small">
               <button  id="$id" onclick="CommentLiker_Unliker('$id')" class="w3-button w3-tiny">$like</button>
               <button class="w3-button w3-tiny"><a class="w3-button" href='create_new_comment_and_reply_edit_existing_comment_and_reply.php?newReply=1&Comment_owner=$comment_username&Category_of_comment=$category_of_comment&Comment_bind_replies_id=$comment_bind_replies_id&time=$comment_time' ><i class="fa fa-comment"></i> Reply </a></button>
+              
             </div>
           </footer>
         </div>
@@ -198,12 +220,13 @@ HTML;
   <div class="commentBlock">
     <?php
 
-    require_once("pagnation.php");
+    require_once("helperfiles/pagnation.php");
 
 
     try {
       //checks if post has any comments
       if ($no_of_replies != 0) {
+        
         $dbh = $instance->getConnection();
         $sqlQuery = "SELECT * FROM Replies WHERE `Category`=? AND `Comment_bind_replies_id`=? ORDER BY `Time` ASC LIMIT ?,? ";
         $dbh = $dbh->prepare($sqlQuery);
@@ -246,7 +269,13 @@ HTML;
                }
                
           if ($replies['Reply_username'] == $_SESSION['Username']) {
+            
+            /*
+            variables specifically needed by the edity reply link
+            */
             $replytime = $replies['Time'];
+            $comment_bind_replies_id=$replies['Comment_bind_replies_id'];
+            
             $reply = <<<REPLY
       	<div class="w3-card-4 " style="width:100%">
           <!-- OP Name and time lapse of post-->
@@ -261,7 +290,7 @@ HTML;
           <!-- Main content of post-->
         <div class="w3-container w3-padding-large w3-leftbar w3-border-grey">
           {$replies['Reply_content']}
-           <div style="display:flex;flex-direction:column;flex-wrap:nowrap;">
+           <div style="display:flex;flex-direction:column;flex-wrap:nowrap;height:auto">
             $image1
             $image2
             $image3
@@ -275,6 +304,13 @@ HTML;
             <!-- Post options-->
             <div class="w3-padding-small">
               <button class="w3-button w3-tiny"><a class="w3-button" href='create_new_comment_and_reply_edit_existing_comment_and_reply.php?newReply=1&Comment_owner=$comment_username&Category_of_comment=$category_of_comment&Comment_bind_replies_id=$comment_bind_replies_id&time=$comment_time' ><i class="fa fa-comment"></i> Reply </a></button>
+               <div class="w3-dropdown-hover">
+               <button class="w3-button w3-tiny">Post Options</button>
+                <div class="w3-dropdown-content w3-padding-large">
+                <button class="w3-button w3-tiny"><a class="w3-button" href='create_new_comment_and_reply_edit_existing_comment_and_reply.php?userReply=$username&id=$comment_bind_replies_id&Replytime=$replytime' ><i class="fa fa-comment"></i> Edit Reply </a></button>
+                <button class=" w3-button w3-tiny" onclick="delete_post_comment_reply('$id')" > Delete Reply</button>
+                </div>
+             </div>
             </div>
           </footer>
         </div>
@@ -360,13 +396,21 @@ REPLY;
     <!-- This exits the middle container -->
    </div>
    
-   <!--This div tag is the Tag reply -->
-   <div style="display:none">
+   <!-- Right container-->
+   <div class="w3-container w3-content w3-col m4 l4  w3-hide-small" id="rightContainer">
+
+   </div>
+        
+   <!-- Right container for small screen devices-->
+   <div class="w3-container w3-animate-right w3-medium-hide w3-large-hide"  id="rightContainerCollapsible" style="position:fixed;z-index:1000;top:0;right:0;display:none;width:80%;height:100%;background-color:white!important;overflow-y:scroll;margin-top:50px">
      
    </div>
+
+     
    <!-- This exits the  w3-row class-->
   </div>
   
+  </div>
   
   <br>
   <br>
@@ -375,40 +419,18 @@ REPLY;
     /*
 		Implementing pagnation check pagnation.php...
 		*/
-
     pagnation();
-
-
     ?>
-
+    
+    <!-- Script tht controls side bar-->
+    <script src="js/sidebar.js"></script>
+    
+    
+    <script type="application/javascript" src="js/CheckUserLoggedIn.php"></script>
+    <script src="js/delete.js"></script>
     <script>
-    let touchstartX = 0
-    let touchendX = 0
     
-    function checkDirection() {
-      if (touchendX < touchstartX) {
-        alert('swiped left!');
-      }
-      if (touchendX > touchstartX) {
-        alert('swiped right!');
-    }
-    }
-    
-    document.addEventListener('touchstart', e => {
-      touchstartX = e.changedTouches[0].screenX
-    })
-    
-    document.addEventListener('touchend', e => {
-      touchendX = e.changedTouches[0].screenX;
-      checkDirection();
-    })
-        
-    
-    
-      /*
-This alters the comment like and number of likes
-*/
-      function CommentLiker_Unliker(id) {
+  function CommentLiker_Unliker(id) {
         if (checkIfLoggedIn() == false) {
           return false;
         }
@@ -431,7 +453,7 @@ This alters the comment like and number of likes
 
           }
         };
-        var link = "PostComments_CommentReplies_Liker_Unliker.php?commentlike_id=".concat(id, "<?php echo '&Post_no='.$post_no; ?>");
+        var link = "helperfiles/PostComments_CommentReplies_Liker_Unliker.php?commentlike_id=".concat(id, "<?php echo '&Post_no='.$post_no; ?>");
         xhttp.open("GET", link, true);
         xhttp.send();
       }
@@ -446,7 +468,9 @@ It uses the PostComments and CommentReplies liker and unliker script
 
 */
 
-      function Reply_Liker_Unliker(id) {
+
+
+     function Reply_Liker_Unliker(id) {
         if (checkIfLoggedIn() == false) {
           return false;
         }
@@ -470,22 +494,46 @@ It uses the PostComments and CommentReplies liker and unliker script
 
           }
         };
-        var link = "PostComments_CommentReplies_Liker_Unliker.php?replylike_id=".concat(id, "<?php echo '&Comment_bind_replies_id='.$comment_bind_replies; ?>");
+        var link = "helperfiles/PostComments_CommentReplies_Liker_Unliker.php?replylike_id=".concat(id, "<?php echo '&Comment_bind_replies_id='.$comment_bind_replies; ?>");
         xhttp.open("GET", link, true);
         xhttp.send();
       }
 
 
-      function checkIfLoggedIn() {
-        var user = '<?php echo $username ?>';
-        if (user == "") {
-          alert('Please Login');
-          return false
-        } else {
-          return true;
+
+      //to load notification from database after newfeed as been loaded
+     function updateNotification(){
+         if (checkIfLoggedIn() == false) {
+          return false;
+        }
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status ==
+            200) {
+            document.getElementById("rightContainer").innerHTML += this.responseText;
+            document.getElementById("rightContainerCollapsible").innerHTML += this.responseText;
+          }
+        };
+          var link = "helperfiles/notification_activity_logs.php?Username=<?php echo $username;?>";
+        xhttp.open("GET", link, true);
+        xhttp.send();
+      }
+      
+      setTimeout(function(){updateNotification(); },2000);
+  
+      function showNotifs(){
+        //this funtion will only fire if site is on small screen window
+        if(window.matchMedia("(max-width: 767px)").matches){
+        if(document.getElementById('rightContainerCollapsible').style.display == "none"){
+          document.getElementById('rightContainerCollapsible').style.display = "block";
+        }else{
+          document.getElementById('rightContainerCollapsible').style.display = "none";
+        }
         }
       }
+   
 
+   
 
 
     </script>

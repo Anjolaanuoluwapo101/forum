@@ -2,8 +2,8 @@
 <?php
 session_name("ProgrammersHub");
 session_start();
-require_once("class.php");
-require_once('utilityfunctions.php');
+require_once("helperfiles/class.php");
+require_once('helperfiles/utilityfunctions.php');
 $username = $_SESSION['Username'];
 if($username == ""){
   echo "<script> alert('Login first'); history.back();</script>";
@@ -125,11 +125,7 @@ try {
   
   */
   
-
-
-  //call the class method to startup a db connection and run either of the queries...
-  require_once("class.php");
-
+  
   /*
 	The below code will run to fetch the reply or comment data(both the text content and the images) ...
 	*/
@@ -285,7 +281,7 @@ try {
     <div class="w3-container w3-leftbar w3-margin">
       <h4 class="w3-tiny w3-panel w3-yellow"> Upload Media<br> (Maximum of 3 Multimedia each less than 1.5MB ) </h4>
 
-     <input class="w3-tiny w3-input" type="file" name="files[]" />                 <input type="hidden" name="filesInDB[]" value="<?php echo $image1; ?>">
+     <input class="w3-tiny w3-input" type="file" name="files[]" >                 <input type="hidden" name="filesInDB[]" value="<?php echo $image1; ?>">
      <span> <?php if (basename($image1) != "imgs") {
       echo basename($image1);
     }; ?> </span>
@@ -371,7 +367,7 @@ try {
         */
 
 
-//require_once("class.php");
+//          require_once("utilityfunctions.php");
 
 
 /*
@@ -393,7 +389,7 @@ if (isset($_POST['newComment'], $_POST['Post_title'], $_POST['Post_no'], $_POST[
       $comment_time = $_POST['time'];
       
       $user_reply_to_comment = $_POST['newReply'];
-      
+      $user_reply_to_comment =trim($user_reply_to_comment);
       //we need to check if the reply contains a tag @anotherperson account
       $matchfor='/@[a-zA-z0-9]{3,}/';
       preg_match_all($matchfor,$user_reply_to_comment,$taggedAccounts);
@@ -401,7 +397,7 @@ if (isset($_POST['newComment'], $_POST['Post_title'], $_POST['Post_no'], $_POST[
       
       
       $reply_time = time();
-      $link = $_POST['link'];
+     // $link = $_POST['link'];
 
       $sqlQueryA = "INSERT INTO Replies(`Reply_username`,`Reply_content`,Time,`Category`,`Comment_bind_replies_id`,`image1`,`image2`,`image3`) VALUES(?,?,?,?,?,?,?,?)";
       $sqlQueryB = "UPDATE Comments SET `Comment_replies_count`=`Comment_replies_count` + 1 WHERE `Time`=? AND `Comment_bind_replies_id` = ? AND `Category` = ? AND `Comment_username`= ? ";
@@ -410,9 +406,10 @@ if (isset($_POST['newComment'], $_POST['Post_title'], $_POST['Post_no'], $_POST[
     } elseif ($_POST['newComment']) {
       $new_comment_time = time();
       $comment_content = $_POST['newComment'];
+      $comment_content =trim($comment_content);
       $comment_bind_reply_id = $_POST['id'];
       $comment_time = time();
-      $link = $_POST['link'];
+     // $link = $_POST['link'];
 
 //we need to check if the comment contains a tag @anotherperson account
       $matchfor='/@[a-zA-z0-9]{3,}/';
@@ -431,9 +428,8 @@ if (isset($_POST['newComment'], $_POST['Post_title'], $_POST['Post_no'], $_POST[
     }
 
 
-    checkMediaCompatibility(1);
-
-    if (isset($_POST['newReply'])) {
+      checkMediaCompatibility(1);
+      if (isset($_POST['newReply'])) {
 
       /*
         The actual reply to a comment is saved with this query...
@@ -461,13 +457,15 @@ if (isset($_POST['newComment'], $_POST['Post_title'], $_POST['Post_no'], $_POST[
       $dbh->bindParam(3, $category_of_comment, PDO::PARAM_STR);
       $dbh->bindParam(4, $comment_owner, PDO::PARAM_STR);
       $dbh->execute();
-
+      echo $comment_bind_reply_id;
+      echo "<br>";
+      echo $reply_time;
       /*
       next thing is to update the number of comments and replies column under the
       UserProfile table.This is neccesary to work out the activities and engagements of a user
       */
 
-      $timeReplyWasMade = time();
+      //$timeReplyWasMade = time();
 
       /*
       next is to get the value in comment_replies_count(No of replies that comment has ).This is required to determine the page
@@ -481,9 +479,9 @@ if (isset($_POST['newComment'], $_POST['Post_title'], $_POST['Post_no'], $_POST[
       $number_of_replies = $dbh->fetchColumn();
       $page_reply_will_be_found = ceil($number_of_replies/15); //15 is the number of replies display per page.
 
-      $link = $_SERVER['HTTP_HOST'].pathinfo($_SERVER['PHP_SELF'])['dirname']."/replies.php?Category=".$category_of_comment."&Comment_bind_replies_id=".$comment_bind_reply_id."&page=".$page_reply_will_be_found."#".$username."|".$reply_time."_B";
+      $link = $_SERVER['HTTP_HOST'].pathinfo($_SERVER['PHP_SELF'])['dirname']."/replies.php?Category=".$category_of_comment."&Comment_bind_replies_id=".$comment_bind_reply_id."&page=".$page_reply_will_be_found."#".$username."|".$reply_time."|_B";
 
-      $activityLog_update = "<b> $username </b> replied your comment to a post  <a target='_blank' href='" .$link."' > View </a> ~ $timeReplyWasMade||";
+      $activityLog_update = "<b> $username </b> replied your comment to a post  <a target='_blank' href='" .$link."' > View </a> ~$reply_time||";
 
 
       $sqlQuery1 = "UPDATE UserProfile SET  `no_of_recieved_comments_and_replies` = `no_of_recieved_comments_and_replies` + 1 , `activity_logs` = CONCAT(`activity_logs` ,?)  WHERE `Username` =?";
@@ -528,7 +526,7 @@ if (isset($_POST['newComment'], $_POST['Post_title'], $_POST['Post_no'], $_POST[
         $sqlQuery3= "UPDATE UserProfile SET `activity_logs` = CONCAT(`activity_logs` ,?)  WHERE `Username` =?";
         $link = $_SERVER['HTTP_REFERER']."&page=".$page_reply_will_be_found."#".$username."|".$reply_time."_B";
        // $link =  "<script>document.referrer </script>";
-        $activityLog_update ="<b>$username</b> tagged you to a reply -> <a target='_blank' href='" .$link."' > View </a> ~ $timeReplyWasMade||";
+        $activityLog_update ="<b>$username</b> tagged you to a reply -> <a target='_blank' href='" .$link."' > View </a> ~$reply_time||";
         
         foreach($taggedAccounts[0] as $taggedAccount){
         $taggedAccount= str_ireplace('@','',$taggedAccount);
@@ -541,7 +539,7 @@ if (isset($_POST['newComment'], $_POST['Post_title'], $_POST['Post_no'], $_POST[
         }
       }
 
-   //   echo "<script>alert('New Reply Sent'); history.go(-2);</script>";
+//     echo "<script>alert('New Reply Sent'); history.go(-2);</script>";
 
     } elseif (isset($_POST['newComment'])) {
 
@@ -577,8 +575,8 @@ if (isset($_POST['newComment'], $_POST['Post_title'], $_POST['Post_no'], $_POST[
         */
 
       $timeCommentWasMade = time();
-      $link = $_SERVER['HTTP_HOST'].pathinfo($_SERVER['PHP_SELF'])['dirname']."/displaypost.php?Post_no=".$post_no."&Post_title=".urlencode($post_title)."&page=".$current_page."#".$username."|".$new_comment_time."_B";
-      $activityLog_update = "$username commented on your post -> <a target='_blank' href='" .$link."' > View </a> ~ $timeCommentWasMade||";
+      $link = $_SERVER['HTTP_HOST'].pathinfo($_SERVER['PHP_SELF'])['dirname']."/dp.php?Post_no=".$post_no."&Post_title=".urlencode($post_title)."&page=".$current_page."#".$username."|".$new_comment_time."|_B";
+      $activityLog_update = "$username commented on your post -> <a target='_blank' href='" .$link."' > View </a> ~$new_comment_time||";
 
       $sqlQuery1 = "UPDATE UserProfile SET `no_of_made_posts_comments_and_replies` = `no_of_made_posts_comments_and_replies` + 1 , `activity_logs` = CONCAT(`activity_logs` ,?)  WHERE `Username` =?";
       $sqlQuery2 = "UPDATE UserProfile SET `no_of_recieved_comments_and_replies` = `no_of_recieved_comments_and_replies` + 1 WHERE `Username` = ?";
@@ -624,7 +622,7 @@ if (isset($_POST['newComment'], $_POST['Post_title'], $_POST['Post_no'], $_POST[
       if(count($taggedAccounts[0]) > 0){
         $sqlQuery3= "UPDATE UserProfile SET `activity_logs` = CONCAT(`activity_logs` ,?)  WHERE `Username` =?";
         $link = $_SERVER['HTTP_REFERER'];
-        $activityLog_update ="<b>$username</b> tagged you to a comment -> <a target='_blank' href='" .$link."' > View </a> ~ $timeReplyWasMade||";
+        $activityLog_update ="<b>$username</b> tagged you to a comment -> <a target='_blank' href='" .$link."' > View </a> ~$new_comment_time||";
         
         foreach($taggedAccounts[0] as $taggedAccount){
         $taggedAccount= str_ireplace('@','',$taggedAccount);
@@ -637,7 +635,7 @@ if (isset($_POST['newComment'], $_POST['Post_title'], $_POST['Post_no'], $_POST[
         }
       }
       
-//      echo "<script>alert('You replied this post');history.go(-2); </script>";
+      echo "<script>alert('You replied this post');history.go(-2); </script>";
 
     }
 
@@ -664,7 +662,7 @@ if (isset($_POST['newComment'], $_POST['Post_title'], $_POST['Post_no'], $_POST[
         	*/
 
 if (isset($_POST["updatedReply"], $_POST["time"], $_POST["id"], $_POST["username"]) || isset($_POST["updatedComment"], $_POST["time"], $_POST["Post_no"], $_POST["username"])) {
-  require_once('class.php');
+  require_once('helperfiles/class.php');
   try {
 
     if (isset($_POST["updatedReply"])) {
